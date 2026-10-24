@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block title %}Collection Prediction{% endblock %}
+
+{% block content %}
+    <h1>Prediction for {{ user.area.name }}</h1>
+    
+    <div class="card">
+        <h3>Select a Date to Predict</h3>
+        <form method="GET" action="/resident/prediction">
+            <input type="date" name="target_date" value="{{ target_date }}" required>
+            <button type="submit">Predict</button>
+        </form>
+    </div>
+
+    {% if result.confidence == "Insufficient Data" and not result.predicted_time %}
+        <div class="card warning-card">
+            <h3>Not Enough Data</h3>
+            <p>We do not have any historical records for this day of the week in your area. The vehicle might not run on this day, or data is missing.</p>
+        </div>
+    {% elif result.predicted_time %}
+        <div class="card success-card">
+            <h3>Expected Arrival</h3>
+            <p style="font-size: 2rem; font-weight: bold; margin: 10px 0;">
+                {{ result.predicted_time.strftime('%I:%M %p') }}
+            </p>
+            
+            <p><strong>Likely Window:</strong> 
+                {{ result.lower_bound.strftime('%I:%M %p') }} - 
+                {{ result.upper_bound.strftime('%I:%M %p') }}
+            </p>
+            
+            <p><strong>Confidence:</strong> 
+                {% if result.confidence == "High" %}
+                    <span style="color: green; font-weight: bold;">{{ result.confidence }}</span>
+                {% elif result.confidence == "Moderate" %}
+                    <span style="color: orange; font-weight: bold;">{{ result.confidence }}</span>
+                {% else %}
+                    <span style="color: red; font-weight: bold;">{{ result.confidence }}</span>
+                {% endif %}
+                <span style="font-size: 0.9rem; color: #666;">(Based on {{ result.count }} historical records)</span>
+            </p>
+        </div>
+    {% endif %}
+{% endblock %}

@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block title %}Resident Dashboard{% endblock %}
+
+{% block content %}
+    <h1>Resident Dashboard</h1>
+    <p>Welcome, <strong>{{ user.name }}</strong>!</p>
+
+    {% if user.area %}
+        <div class="card success-card">
+            <h3>Your Area: {{ user.area.name }}</h3>
+            <p>Ward: {{ user.area.ward }}</p>
+            <p>Landmark: {{ user.area.landmark }}</p>
+        </div>
+        
+            <div class="card" style="text-align: center;">
+                    <h3>Collection Predictions</h3>
+                    <p>Find out when the truck is expected to arrive.</p>
+                    <a href="/resident/prediction" style="display: inline-block; background: #3498db; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px; margin-top: 10px;">View Prediction</a>
+        </div>
+    {% else %}
+        <div class="card warning-card">
+            <h3>Action Required</h3>
+            <p>You have not selected your area yet. You must select an area to receive collection notifications.</p>
+            
+            <form method="POST" action="/resident/set-area">
+                <select name="area_id" required>
+                    <option value="">-- Select your Area --</option>
+                    {% for area in areas %}
+                        <option value="{{ area.id }}">{{ area.name }} ({{ area.ward }})</option>
+                    {% endfor %}
+                </select>
+                <button type="submit">Save Area</button>
+            </form>
+        </div>
+    {% endif %}
+{% endblock %}

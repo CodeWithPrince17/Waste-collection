@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Smart Waste System{% endblock %}</title>
+    <!-- Basic CSS to make it look decent for the defense -->
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-brand">Smart Waste System</div>
+        <div class="nav-links">
+            {% if request.session.get("user_id") %}
+                <span>Welcome!</span>
+                <a href="/logout" class="btn-logout">Logout</a>
+            {% endif %}
+        </div>
+    </nav>
+
+    <main class="container">
+        <!-- Other templates will inject their content here -->
+        {% block content %}{% endblock %}
+    </main>
+</body>
+</html>
