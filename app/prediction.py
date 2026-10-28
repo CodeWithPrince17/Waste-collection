@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Request, Depends, HTTPException
+from fastapi import APIRouter, Request, Depends, HTTPException, Form
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
@@ -114,3 +114,74 @@ def view_prediction(
             "result": result
         }
     )
+from app.models import CollectionReport
+
+@router.post("/resident/feedback/{event_id}")
+def submit_feedback(
+    event_id: int,
+    status_input: str = Form(...), # This will be "yes" or "no"
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    # 1. Find the event
+    event = db.query(CollectionEvent).filter(CollectionEvent.id == event_id).first()
+    
+    # 2. Security check: Ensure the event exists and belongs to the user's area
+    if not event or event.area_id != current_user.area_id:
+        raise HTTPException(status_code=404, detail="Event not found")
+
+    # 3. Create the report
+    report = CollectionReport(
+        user_id=current_user.id,
+        collection_event_id=event.id,
+        status="collected" if status_input == "yes" else "missed"
+    )
+    db.add(report)
+
+    # 4. If they missed it, change the event status
+    if status_input == "no":
+        event.status = "missed"
+
+    db.commit()
+
+    # 5. Reload the dashboard
+    return RedirectResponse(url="/resident", status_code=303)
+
+
+def calculate_mae(predictions: list[Prediction], actual_events: list[CollectionEvent]) -> dict:
+    """
+    Calculates the Mean Absolute Error (MAE) between predicted times and actual times.
+    """
+    # Create a dictionary to easily look up actual times by date
+    actual_times = {}
+    for event in actual_events:
+        if event.actual_time:
+            actual_times[event.collection_date] = event.actual_time
+
+    errors = []
+    
+    for pred in predictions:
+        # Check if we have actual data for this prediction's date
+        if pred.prediction_date in actual_times:
+            actual_time = actual_times[pred.prediction_date]
+            
+            # Convert both to minutes from midnight
+            pred_mins = (pred.predicted_time.hour * 60) + pred.predicted_time.minute
+            actual_mins = (actual_time.hour * 60) + actual_time.minute
+            
+            # Calculate absolute difference
+            error = abs(pred_mins - actual_mins)
+            errors.append(error)
+
+    if not errors:
+        return {"mae": None, "count": 0}
+
+    # Calculate mean
+    mean_error = sum(errors) / len(errors)
+    
+    return {
+        "mae": round(mean_error, 2),
+        "count": len(errors),
+        "min_error": min(errors),
+        "max_error": max(errors)
+    }

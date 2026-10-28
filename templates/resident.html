@@ -18,6 +18,19 @@
                     <p>Find out when the truck is expected to arrive.</p>
                     <a href="/resident/prediction" style="display: inline-block; background: #3498db; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px; margin-top: 10px;">View Prediction</a>
         </div>
+
+
+                <!-- FEEDBACK CARD -->
+        {% if yesterday_event and not already_reported %}
+        <div class="card" style="border-left: 5px solid #e67e22;">
+            <h3>Did we miss you?</h3>
+            <p>Was your waste collected yesterday ({{ yesterday_event.collection_date }})?</p>
+            <form method="POST" action="/resident/feedback/{{ yesterday_event.id }}" style="display: flex; gap: 10px;">
+                <button type="submit" name="status_input" value="yes" style="background: #2ecc71; flex: 1;">Yes, Collected</button>
+                <button type="submit" name="status_input" value="no" style="background: #e74c3c; flex: 1;">No, Missed</button>
+            </form>
+        </div>
+        {% endif %}
     {% else %}
         <div class="card warning-card">
             <h3>Action Required</h3>

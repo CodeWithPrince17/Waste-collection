@@ -1,3 +1,6 @@
+import warnings
+warnings.filterwarnings("ignore", category=UserWarning, module="passlib")
+
 from passlib.context import CryptContext
 
 # We use bcrypt as our hashing algorithm. 

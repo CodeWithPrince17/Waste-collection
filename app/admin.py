@@ -9,6 +9,9 @@ from app.database import get_db
 from app.auth import require_admin
 from app.models import User, Area, CollectionEvent
 
+from app.models import Prediction
+from app.prediction import calculate_mae
+
 router = APIRouter()
 templates = Jinja2Templates(directory="templates")
 
@@ -81,3 +84,30 @@ def add_event(
     db.commit()
 
     return RedirectResponse(url="/admin", status_code=status.HTTP_303_SEE_OTHER)
+
+
+
+@router.get("/admin/evaluation", response_class=HTMLResponse)
+def admin_evaluation(
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin)
+):
+    # 1. Fetch all predictions from the database
+    predictions = db.query(Prediction).all()
+    
+    # 2. Fetch all historical events
+    actual_events = db.query(CollectionEvent).all()
+    
+    # 3. Run the calculation
+    result = calculate_mae(predictions, actual_events)
+
+    return templates.TemplateResponse(
+        request=request,
+        name="evaluation.html",
+        context={
+            "user": current_user,
+            "result": result,
+            "total_predictions": len(predictions)
+        }
+    )

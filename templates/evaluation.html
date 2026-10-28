@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block title %}Prediction Evaluation{% endblock %}
+
+{% block content %}
+    <h1>Prediction Accuracy (MAE)</h1>
+    <p>Mean Absolute Error (MAE) is the average number of minutes our prediction was off by.</p>
+
+    <div class="card">
+        <h3>System Metrics</h3>
+        <p><strong>Total Predictions Logged:</strong> {{ total_predictions }}</p>
+        
+        {% if result.mae is not none %}
+            <div style="margin-top: 20px; padding: 20px; background: #e8f4f8; border-left: 5px solid #3498db;">
+                <h2 style="margin: 0; color: #2c3e50;">MAE: {{ result.mae }} minutes</h2>
+                <p style="margin-top: 10px;">Based on <strong>{{ result.count }}</strong> matched events.</p>
+                <p>Lowest error: {{ result.min_error }} mins | Highest error: {{ result.max_error }} mins</p>
+            </div>
+        {% else %}
+            <p style="color: #e74c3c;">Not enough data to calculate MAE yet. Predictions need to be matched with actual collection events.</p>
+        {% endif %}
+    </div>
+{% endblock %}
+
